@@ -42,11 +42,11 @@ public class FilterController {
         BufferedImage targetImage = new BufferedImage(sourceWidth, sourceHeight, sourceImage.getType());
         IntStream.range(0, sourceHeight).parallel().forEach(y -> IntStream.range(0, sourceWidth).forEach(x -> {
             int pixel = sourceImage.getRGB(x, y);
-            int channel2 = pixel & 0x00FF0000;
-            int channel3 = pixel & 0x0000FF00;
-            int swappedPixel = (channel2 >> 8) | (channel3 << 8);
-            targetImage.setRGB(x, y, swappedPixel);
-
+            int red = pixel & 0x00FF0000;
+            int green = pixel & 0x0000FF00;
+            int blue = pixel & 0x000000FF;
+            int rotatedPixel = (red >> 8) | (green >> 8) | (blue << 16);
+            targetImage.setRGB(x, y, rotatedPixel);
         }));
         return targetImage;
     }
