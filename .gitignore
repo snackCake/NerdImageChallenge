@@ -1,2 +1,5 @@
 NerdImageChallenge.iml
 .idea/*
+.gradle/*
+imagechallenge*.log
+build/*
