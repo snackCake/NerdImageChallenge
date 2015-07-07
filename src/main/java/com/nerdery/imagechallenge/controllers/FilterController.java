@@ -1,6 +1,5 @@
 package com.nerdery.imagechallenge.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletContext;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -20,9 +18,6 @@ import java.util.stream.IntStream;
 
 @Controller
 public class FilterController {
-
-    @Autowired
-    ServletContext context;
 
     @RequestMapping("/filter")
     public ResponseEntity<byte[]> testphoto() throws IOException, URISyntaxException {
