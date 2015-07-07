@@ -1,5 +1,6 @@
 package com.nerdery.imagechallenge.controllers;
 
+import com.nerdery.imagechallenge.services.CompositeService;
 import com.nerdery.imagechallenge.services.FilterService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,6 +26,7 @@ import java.util.Optional;
 @Controller
 public class FilterController {
 
+    private CompositeService compositeService;
     private FilterService filterService;
     private String sourceUrl;
 
@@ -34,7 +35,7 @@ public class FilterController {
         BufferedImage sourceImage = ImageIO.read(new URL(sourceUrl));
         Optional<BufferedImage> targetImage = filterService.transformImage(sourceImage, filterName);
         if (targetImage.isPresent()) {
-            return buildSuccessResponse(buildFinalComposite(sourceImage, targetImage.get()));
+            return buildSuccessResponse(compositeService.buildComposite(sourceImage, targetImage.get()));
         } else {
             return new ResponseEntity<>("Invalid filter name".getBytes(), HttpStatus.BAD_REQUEST);
         }
@@ -48,18 +49,6 @@ public class FilterController {
         return new ResponseEntity<>(imageByteStream.toByteArray(), headers, HttpStatus.CREATED);
     }
 
-    private BufferedImage buildFinalComposite(BufferedImage sourceImage, BufferedImage targetImage) {
-        int sourceHeight = sourceImage.getHeight();
-        int sourceWidth = sourceImage.getWidth();
-        BufferedImage finalImage = new BufferedImage(sourceWidth, sourceHeight * 2 + 1, sourceImage.getType());
-        Graphics graphics = finalImage.getGraphics();
-        graphics.drawImage(sourceImage, 0, 0, null);
-        graphics.setColor(Color.RED);
-        graphics.drawLine(0, sourceHeight, sourceWidth, sourceHeight);
-        graphics.drawImage(targetImage, 0, sourceHeight + 1, null);
-        return finalImage;
-    }
-
     @Inject
     public void setSourceUrl(@Value("${imagechallenge.sourceurl}") String theSourceUrl) {
         sourceUrl = theSourceUrl;
@@ -68,5 +57,10 @@ public class FilterController {
     @Inject
     public void setFilterService(FilterService filterService) {
         this.filterService = filterService;
+    }
+
+    @Inject
+    public void setCompositeService(CompositeService compositeService) {
+        this.compositeService = compositeService;
     }
 }
