@@ -43,7 +43,7 @@ public class Population {
 
         final LinkedList<Candidate> nextGeneration = new LinkedList<>();
 
-        IntStream.range(0, size / 2).parallel().forEach(i -> {
+        IntStream.range(0, size / 2).forEach(i -> {
             final Candidate c1 = tournament();
             final Candidate c2 = tournament();
 

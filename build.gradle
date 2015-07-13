@@ -31,6 +31,7 @@ repositories {
 
 
 dependencies {
+    compile("org.reflections:reflections:0.9.10")
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("commons-io:commons-io:2.4")
     compile "org.scala-lang:scala-library:2.11.7"

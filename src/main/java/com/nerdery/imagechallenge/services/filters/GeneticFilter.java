@@ -11,8 +11,6 @@ import java.awt.image.BufferedImage;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * @author Patrick Garrity
@@ -30,8 +28,8 @@ public class GeneticFilter implements ImageFilter {
 
     private static final Map<String, ImageFilter> FILTERS = new HashMap<>();
 
-    private static final int POPULATION_SIZE = 100;
-    private static final int GENERATIONS = 10;
+    private static final int POPULATION_SIZE = 50;
+    private static final int GENERATIONS = 800;
 
     /**
      * When we load this class we want to use reflection to find every other image filter and attempt to instantiate

@@ -4,7 +4,19 @@ import java.security.SecureRandom;
 
 public class Colors {
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final int MAXIMUM_JITTER = 8;
+    private static final int MAXIMUM_JITTER = 16;
+
+    public static int red(final int pixel) {
+        return (pixel >> 16) & 0xFF;
+    }
+
+    public static int green(final int pixel) {
+        return (pixel >> 8) & 0xFF;
+    }
+
+    public static int blue(final int pixel) {
+        return (pixel) & 0xFF;
+    }
 
     /**
      * Given a pixel, randomly jitter its colors. This method does not affect the alpha component of the pixel.

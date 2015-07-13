@@ -14,7 +14,7 @@ public class Candidate {
 
     private final int[] data;
     private final int[] scores;
-    private int totalScore = Integer.MAX_VALUE;
+    private long totalScore = Long.MAX_VALUE;
     private int size;
 
     protected Candidate(final int [] reference) {
@@ -80,7 +80,10 @@ public class Candidate {
      * @return The pixel score.
      */
     protected int calculateScore(final int index, final int[] reference) {
-        return Math.abs(reference[index] - data[index]);
+        final int rScore = Math.abs(Colors.red(reference[index]) - Colors.red(data[index]));
+        final int gScore = Math.abs(Colors.green(reference[index]) - Colors.green(data[index]));
+        final int bScore = Math.abs(Colors.blue(reference[index]) - Colors.blue(data[index]));
+        return rScore + gScore + bScore;
     }
 
     public int[] getData() {
@@ -91,7 +94,7 @@ public class Candidate {
         return scores;
     }
 
-    public int getTotalScore() {
+    public long getTotalScore() {
         return totalScore;
     }
 
