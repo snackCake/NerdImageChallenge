@@ -1,5 +1,6 @@
 package com.nerdery.imagechallenge.services;
 
+import com.nerdery.imagechallenge.services.filters.FilterResult;
 import com.nerdery.imagechallenge.services.filters.ImageFilter;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +25,14 @@ public class FilterService {
         this.filters = filters.stream().collect(Collectors.toMap(ImageFilter::getName, Function.identity()));
     }
 
-    public Optional<BufferedImage> transformImage(BufferedImage sourceImage, String filterName) {
+    public Optional<FilterResult> transformImage(BufferedImage sourceImage, String filterName) {
         if (!filters.containsKey(filterName)) {
             return Optional.empty();
         } else {
+            long startTime = System.currentTimeMillis();
             BufferedImage transformedImage = filters.get(filterName).transform(sourceImage);
-            return Optional.of(transformedImage);
+            FilterResult result = new FilterResult(System.currentTimeMillis() - startTime, transformedImage);
+            return Optional.of(result);
         }
     }
 }
