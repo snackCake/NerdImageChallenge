@@ -4,6 +4,7 @@ import com.nerdery.imagechallenge.services.filters.ImageFilter;
 import org.springframework.stereotype.Component;
 
 import java.awt.image.BufferedImage;
+import java.util.stream.IntStream;
 
 /**
  * An adaptation of {@link com.nerdery.imagechallenge.services.filters.OilPaintFilter} which performs better.
@@ -70,17 +71,13 @@ public class FasterOilPaintFilter implements ImageFilter {
         }
 
         BufferedImage transform() {
-            for (int y = 0; y < height; y++) {
-                transformRow(y);
-            }
+            IntStream.range(0, height).parallel().forEach(this::transformRow);
             targetImage.getRaster().setPixels(0, 0, width, height, targetPixels);
             return targetImage;
         }
 
         private void transformRow(int y) {
-            for (int x = 0; x < width; x++) {
-                transformPixel(x, y);
-            }
+            IntStream.range(0, width).parallel().forEach(x -> transformPixel(x, y));
         }
 
         private void transformPixel(int x, int y) {
