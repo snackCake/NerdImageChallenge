@@ -19,8 +19,6 @@ public class FasterOilPaintFilter implements ImageFilter {
 
     // calculated constants
     private static final int RADIUS2 = RADIUS * RADIUS;
-    private static final int DIAMETER = RADIUS * 2;
-    private static final int DIAMETER2 = DIAMETER * DIAMETER;
 
     // band constants
     private static final int RGB = 3;
@@ -52,10 +50,6 @@ public class FasterOilPaintFilter implements ImageFilter {
         int[] sourcePixels;
         int[] targetPixels;
 
-        final int[][] levelBuckets = new int[LEVELS][];
-        final int [] levelBucketSizes = new int[LEVELS];
-        int largestLevelBucket;
-
         Instance(BufferedImage sourceImage) {
             this.sourceImage = sourceImage;
             init();
@@ -71,11 +65,6 @@ public class FasterOilPaintFilter implements ImageFilter {
 
             sourcePixels = sourceImage.getRaster().getPixels(0, 0, width, height, new int[width * height * bands]);
             targetPixels = new int[width * height * bands];
-
-            for (int i = 0; i < LEVELS; i++) {
-                // initialize each bucket to the max size that may be needed
-                levelBuckets[i] = new int[DIAMETER2 * bands];
-            }
 
             targetImage = new BufferedImage(width, height, sourceImage.getType());
         }
@@ -95,42 +84,44 @@ public class FasterOilPaintFilter implements ImageFilter {
         }
 
         private void transformPixel(int x, int y) {
-            resetLevelBucketSizes();
-            organizeNeighboringPixelsIntoLevelBuckets(x, y);
-            averageLargestBucketAndSetPixel(x, y);
-        }
+            int largestBucket = 0;
+            int[] bucketSizes = new int[LEVELS];
+            int[] bucketR = new int[LEVELS];
+            int[] bucketG = new int[LEVELS];
+            int[] bucketB = new int[LEVELS];
 
-        private void resetLevelBucketSizes() {
-            largestLevelBucket = 0;
-            for (int i = 0; i < LEVELS; i++) {
-                levelBucketSizes[i] = 0;
-            }
-        }
-
-        private void organizeNeighboringPixelsIntoLevelBuckets(int x, int y) {
             for (int dX = -RADIUS; dX < RADIUS; dX++) {
                 int pX = x + dX;
                 if (!withinBoundsX(pX)) continue;
                 for (int dY = -RADIUS; dY < RADIUS; dY++) {
                     int pY = y + dY;
                     if (withinBoundsY(pY) && withinCircle(dX, dY)) {
-                        int o = getPixelOffset(pX, pY);
-                        int r = sourcePixels[o];
-                        int g = sourcePixels[o + 1];
-                        int b = sourcePixels[o + 2];
+                        int offset = getPixelOffset(pX, pY);
+                        int r = sourcePixels[offset];
+                        int g = sourcePixels[offset + 1];
+                        int b = sourcePixels[offset + 2];
                         int level = calculateLevel(r, g, b);
-                        int size = levelBucketSizes[level];
-                        int[] bucket = levelBuckets[level];
-                        bucket[size] = r;
-                        bucket[size + 1] = g;
-                        bucket[size + 2] = b;
-                        size += bands;
-                        levelBucketSizes[level] = size;
-                        if (size > levelBucketSizes[largestLevelBucket]) {
-                            largestLevelBucket = level;
+
+                        bucketR[level] += r;
+                        bucketG[level] += g;
+                        bucketB[level] += b;
+
+                        bucketSizes[level]++;
+                        if (level != largestBucket && bucketSizes[level] > bucketSizes[largestBucket]) {
+                            largestBucket = level;
                         }
                     }
                 }
+            }
+
+            int bucketSize = bucketSizes[largestBucket];
+
+            int offset = getPixelOffset(x, y);
+            targetPixels[offset] = bucketR[largestBucket] / bucketSize;
+            targetPixels[offset + 1] = bucketG[largestBucket] / bucketSize;
+            targetPixels[offset + 2] = bucketB[largestBucket] / bucketSize;
+            if (bands == ARGB) {
+                targetPixels[offset + 3] = sourcePixels[offset + 3];
             }
         }
 
@@ -144,28 +135,6 @@ public class FasterOilPaintFilter implements ImageFilter {
 
         private int calculateLevel(int r, int g, int b) {
             return (((r + g + b) / 3) * (LEVELS - 1)) / 255;
-        }
-
-        private void averageLargestBucketAndSetPixel(int x, int y) {
-            int[] largestBucket = levelBuckets[largestLevelBucket];
-            int largestBucketSize = levelBucketSizes[largestLevelBucket];
-            int largestBucketCount = largestBucketSize / bands;
-
-            int ar = 0;
-            int ag = 0;
-            int ab = 0;
-            for (int i = 0; i < largestBucketSize; i += bands) {
-                ar += largestBucket[i];
-                ag += largestBucket[i + 1];
-                ab += largestBucket[i + 2];
-            }
-
-            int o = getPixelOffset(x, y);
-            targetPixels[o] = ar / largestBucketCount;
-            targetPixels[o + 1] = ag / largestBucketCount;
-            targetPixels[o + 2] = ab / largestBucketCount;
-            if (bands == ARGB)
-                targetPixels[o + 3] = sourcePixels[o + 3];
         }
 
         private int getPixelOffset(int x, int y) {
