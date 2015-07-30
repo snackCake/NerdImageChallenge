@@ -25,6 +25,11 @@ public class FasterOilPaintFilter implements ImageFilter {
     private static final int RGB = 3;
     private static final int ARGB = 4;
 
+    /**
+     * Use the following formula to determine if x & y are within RADIUS:
+     *
+     * x<sup>2</sup> + y<sup>2</sup> &lt; <code>RADIUS</code><sup>2</sup>
+     */
     private static boolean withinCircle(int x, int y) {
         return (x * x + y * y) < RADIUS2;
     }
@@ -39,29 +44,26 @@ public class FasterOilPaintFilter implements ImageFilter {
         return new Instance(sourceImage).transform();
     }
 
+    /**
+     * Wrap logic and state in inner class so as to allow this to be used as a stateless bean.
+     */
     private static class Instance {
 
-        final BufferedImage sourceImage;
-        BufferedImage targetImage;
-
-        int width;
-        int height;
-        int bands = RGB;
-
-        int[] sourcePixels;
-        int[] targetPixels;
+        final BufferedImage targetImage;
+        final int width;
+        final int height;
+        final int bands;
+        final int[] sourcePixels;
+        final int[] targetPixels;
 
         Instance(BufferedImage sourceImage) {
-            this.sourceImage = sourceImage;
-            init();
-        }
-
-        private void init() {
             width = sourceImage.getWidth();
             height = sourceImage.getHeight();
 
             if (sourceImage.getColorModel().hasAlpha()) {
                 bands = ARGB;
+            } else {
+                bands = RGB;
             }
 
             sourcePixels = sourceImage.getRaster().getPixels(0, 0, width, height, new int[width * height * bands]);
@@ -71,12 +73,14 @@ public class FasterOilPaintFilter implements ImageFilter {
         }
 
         BufferedImage transform() {
+            // use a parallel IntStream to process each row - MOAR CORES == MOAR BETTER!!!
             IntStream.range(0, height).parallel().forEach(this::transformRow);
             targetImage.getRaster().setPixels(0, 0, width, height, targetPixels);
             return targetImage;
         }
 
         private void transformRow(int y) {
+            // use another parallel InStream here, although it probably doesn't matter (won't improve performance)
             IntStream.range(0, width).parallel().forEach(x -> transformPixel(x, y));
         }
 
@@ -112,7 +116,6 @@ public class FasterOilPaintFilter implements ImageFilter {
             }
 
             int bucketSize = bucketSizes[largestBucket];
-
             int offset = getPixelOffset(x, y);
             targetPixels[offset] = bucketR[largestBucket] / bucketSize;
             targetPixels[offset + 1] = bucketG[largestBucket] / bucketSize;
@@ -125,15 +128,20 @@ public class FasterOilPaintFilter implements ImageFilter {
         private boolean withinBoundsX(int x) {
             return x >= 0 && x < width;
         }
-
         private boolean withinBoundsY(int y) {
             return y >= 0 && y < height;
         }
 
+        /**
+         * Calculate the level of intensity given the RGB color value.
+         */
         private int calculateLevel(int r, int g, int b) {
             return (((r + g + b) / 3) * (LEVELS - 1)) / 255;
         }
 
+        /**
+         * Calculate the offset of the pixel at x, y given the width and number of color bands.
+         */
         private int getPixelOffset(int x, int y) {
             return (y * width + x) * bands;
         }
