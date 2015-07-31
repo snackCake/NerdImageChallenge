@@ -2,6 +2,7 @@ package com.nerdery.imagechallenge.controllers;
 
 import com.nerdery.imagechallenge.services.CompositeService;
 import com.nerdery.imagechallenge.services.FilterService;
+import com.nerdery.imagechallenge.services.filters.FilterResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class FilterController {
     @RequestMapping("/filter/{name}")
     public ResponseEntity<byte[]> getTransformedImage(@PathVariable("name") String filterName) throws IOException, URISyntaxException {
         BufferedImage sourceImage = ImageIO.read(new URL(sourceUrl));
-        Optional<BufferedImage> targetImage = filterService.transformImage(sourceImage, filterName);
+        Optional<FilterResult> targetImage = filterService.transformImage(sourceImage, filterName);
         if (targetImage.isPresent()) {
             return buildSuccessResponse(compositeService.buildComposite(sourceImage, targetImage.get()));
         } else {
