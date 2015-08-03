@@ -34,7 +34,8 @@ dependencies {
     compile("org.reflections:reflections:0.9.10")
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("commons-io:commons-io:2.4")
-    compile "org.scala-lang:scala-library:2.11.7"
+    compile("org.apache.commons:commons-lang3:3.4")
+    compile("org.scala-lang:scala-library:2.11.7")
     compile("javax.inject:javax.inject:1")
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
