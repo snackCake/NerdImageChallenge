@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.nerdery.imagechallenge.services.CompositeService;
 import com.nerdery.imagechallenge.services.FilterService;
+import com.nerdery.imagechallenge.services.filters.FilterResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -60,7 +61,7 @@ public class FilterController {
 
     private ResponseEntity<byte[]> buildResponseEntity(@PathVariable("name") String filterName, String fileFormat) throws IOException {
         BufferedImage sourceImage = ImageIO.read(new URL(sourceUrl));
-        Optional<BufferedImage> targetImage = filterService.transformImage(sourceImage, filterName);
+        Optional<FilterResult> targetImage = filterService.transformImage(sourceImage, filterName);
         if (targetImage.isPresent()) {
             return buildSuccessResponse(compositeService.buildComposite(sourceImage, targetImage.get()), fileFormat);
         } else {
